@@ -197,7 +197,7 @@ class ProbPlot(object):
     def sample_percentiles(self):
         if self._sample_percentiles is None:
             quantiles = \
-                self.sorted_data - self.fit_params[-2])/self.fit_params[-1]
+                (self.sorted_data - self.fit_params[-2])/self.fit_params[-1]
             self._sample_percentiles =  self.dist.cdf(qntls)
         return self._sample_percentiles
 
