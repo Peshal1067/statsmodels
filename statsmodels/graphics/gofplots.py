@@ -152,7 +152,7 @@ class ProbPlot(object):
             self.scale = scale
 
         # propertes
-        self._cache = cache_readonly()
+        self._cache = resettable_cache()
 
     @cache_readonly
     def theoretical_percentiles(self):
