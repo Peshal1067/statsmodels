@@ -148,9 +148,9 @@ class test_top_level:
     def setup(self):
         self.data = sm.datasets.longley.load()
         self.data.exog = sm.add_constant(data.exog, prepend=False)
-        self.mod_fit = sm.OLS(data.endog, data.exog).fit()
-        self.res = mod_fit.resid
-        self.prbplt = sm.ProbPlot(mod_fit.resid, stats.t, distargs=(4,))
+        self.mod_fit = sm.OLS(self.data.endog, data.exog).fit()
+        self.res = self.mod_fit.resid
+        self.prbplt = sm.ProbPlot(self.mod_fit.resid, stats.t, distargs=(4,))
         self.other_array = np.random.normal(size=self.prbplt.data.shape)
         self.other_prbplot = sm.ProbPlot(self.other_array)
 
@@ -175,5 +175,3 @@ class test_top_level:
         for line in ['r', 'q', '45', 's']:
             # test with arrays
             fig = sm.qqplot_2samples(self.res, self.other_array, line=line)
-
-
