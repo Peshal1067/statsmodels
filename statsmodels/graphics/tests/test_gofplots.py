@@ -113,9 +113,9 @@ class _base_probplot:
 class test_ProbPlot_Longely(_base_probplot):
     def setup(self):
         self.data = sm.datasets.longley.load()
-        self.data.exog = sm.add_constant(data.exog, prepend=False)
-        self.mod_fit = sm.OLS(data.endog, data.exog).fit()
-        self.prbplt = sm.ProbPlot(mod_fit.resid, stats.t, distargs=(4,))
+        self.data.exog = sm.add_constant(self.data.exog, prepend=False)
+        self.mod_fit = sm.OLS(self.data.endog, self.data.exog).fit()
+        self.prbplt = sm.ProbPlot(self.mod_fit.resid, stats.t, distargs=(4,))
         self.line = 'r'
         self.base_setup()
 
@@ -147,8 +147,8 @@ class test_ProbPlot_RandomNormal_LocScale(_base_probplot):
 class test_top_level:
     def setup(self):
         self.data = sm.datasets.longley.load()
-        self.data.exog = sm.add_constant(data.exog, prepend=False)
-        self.mod_fit = sm.OLS(self.data.endog, data.exog).fit()
+        self.data.exog = sm.add_constant(self.data.exog, prepend=False)
+        self.mod_fit = sm.OLS(self.data.endog, self.data.exog).fit()
         self.res = self.mod_fit.resid
         self.prbplt = sm.ProbPlot(self.mod_fit.resid, stats.t, distargs=(4,))
         self.other_array = np.random.normal(size=self.prbplt.data.shape)
