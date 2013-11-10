@@ -2,6 +2,9 @@ import numpy as np
 from scipy import stats
 from statsmodels.regression.linear_model import OLS
 from statsmodels.tools.tools import add_constant
+from statsmodels.tools.decorators import (resettable_cache,
+                                          cache_readonly,
+                                          cache_writable)
 
 from . import utils
 
@@ -149,57 +152,42 @@ class ProbPlot(object):
             self.scale = scale
 
         # propertes
-        self._theoretical_percentiles = None
-        self._theoretical_quantiles = None
-        self._sorted_data = None
-        self._sample_quantiles = None
-        self._sample_percentiles = None
+        self._cache = cache_readonly()
 
-    @property
+    @cache_readonly
     def theoretical_percentiles(self):
-        if self._theoretical_percentiles is None:
-            self._theoretical_percentiles = plotting_pos(self.nobs, self.a)
-        return self._theoretical_quantiles
+        return plotting_pos(self.nobs, self.a)
 
-    @property
+    @cache_readonly
     def theoretical_quantiles(self):
-        if self._theoretical_quantiles is None:
-            try:
-                self._theoretical_quantiles = \
-                    self.dist.ppf(self.theoretical_percentiles)
-            except TypeError:
-                print('%s requires more parameters to compute ppf' % \
-                        (self.dist.name,))
-            except:
-                print('failed to compute the ppf of %s' % \
-                        (self.dist.name,))
+        try:
+            return self.dist.ppf(self.theoretical_percentiles)
+        except TypeError:
+            msg = '%s requires more parameters to ' \
+                  'compute ppf'.format(self.dist.name,)
+            print(msg)
+        except:
+            msg = 'failed to compute the ppf of {0}'.format(self.dist.name,)
+            print(msg)
 
-        return self._theoretical_quantiles
-
-    @property
+    @cache_readonly
     def sorted_data(self):
-        if self._sorted_data is None:
-            self._sorted_data = np.array(self.data, copy=True)
-            self._sorted_data.sort()
-        return self._sorted_data
+        sorted_data = np.array(self.data, copy=True)
+        sorted_data.sort()
+        return sorted_data
 
-    @property
+    @cache_readonly
     def sample_quantiles(self):
-        if self._sample_quantiles is None:
-            if self.fit and self.loc != 0 and self.scale != 1:
-                self._sample_quantiles = (self.sorted_data-self.loc)/self.scale
-            else:
-                self._sample_quantiles = self.sorted_data
+        if self.fit and self.loc != 0 and self.scale != 1:
+            return (self.sorted_data-self.loc)/self.scale
+        else:
+            return self.sorted_data
 
-        return self._sample_quantiles
-
-    @property
+    @cache_readonly
     def sample_percentiles(self):
-        if self._sample_percentiles is None:
-            quantiles = \
-                (self.sorted_data - self.fit_params[-2])/self.fit_params[-1]
-            self._sample_percentiles =  self.dist.cdf(qntls)
-        return self._sample_percentiles
+        quantiles = \
+            (self.sorted_data - self.fit_params[-2])/self.fit_params[-1]
+        return self.dist.cdf(qntls)
 
     def ppplot(self, ax=None, xlabel=None, ylabel=None, line=None, other=None,
                **plotkwargs):
