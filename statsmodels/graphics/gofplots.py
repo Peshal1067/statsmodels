@@ -166,7 +166,7 @@ class ProbPlot(object):
         if self._theoretical_quantiles is None:
             try:
                 self._theoretical_quantiles = \
-                    self.dist.ppf(self.theoretical_percentiles())
+                    self.dist.ppf(self.theoretical_percentiles)
             except TypeError:
                 print('%s requires more parameters to compute ppf' % \
                         (self.dist.name,))
@@ -197,7 +197,7 @@ class ProbPlot(object):
     def sample_percentiles(self):
         if self._sample_percentiles is None:
             quantiles = \
-                self.sorted_data() - self.fit_params[-2])/self.fit_params[-1]
+                self.sorted_data - self.fit_params[-2])/self.fit_params[-1]
             self._sample_percentiles =  self.dist.cdf(qntls)
         return self._sample_percentiles
 
