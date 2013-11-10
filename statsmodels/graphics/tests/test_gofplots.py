@@ -24,7 +24,7 @@ class _base_probplot:
         self.other_array = np.random.normal(size=self.prbplt.data.shape)
         self.other_prbplot = sm.ProbPlot(self.other_array)
 
-    def teardown():
+    def teardown(self):
         if have_matplotlib:
             plt.close('all')
 
