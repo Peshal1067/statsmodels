@@ -146,11 +146,9 @@ class ProbPlot(object):
         if self.fit and len(self.fit_params) >2:
             return self._dist(*self.fit_params[:-2], loc=self.loc,
                               scale=self.scale)
-
         elif  len(self._distargs) > 0:
             return self._dist(*self._distargs, loc=self.loc,
                               scale=self.scale)
-
         else:
             return self._dist
 
@@ -196,7 +194,7 @@ class ProbPlot(object):
             raise TypeError(msg)
         except:
             msg = 'failed to compute the ppf of {0}'.format(self.dist.name,)
-            raise
+            raise ValueError(msg)
 
     @cache_readonly
     def sorted_data(self):
