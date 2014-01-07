@@ -686,25 +686,25 @@ def _fmt_probplot_axis(ax, dist, nobs):
     There is no return value. This operates on `ax` in place
     """
     _check_for_ppf(dist)
+
     if nobs < 50:
         axis_probs = np.array([1,2,5,10,20,30,40,50,60,
-                               70,80,90,95,98,99,])/100.0
+                               70,80,90,95,98,99,])
     elif nobs < 500:
         axis_probs = np.array([0.1,0.2,0.5,1,2,5,10,20,30,40,50,60,70,
-                               80,90,95,98,99,99.5,99.8,99.9])/100.0
+                               80,90,95,98,99,99.5,99.8,99.9])
     else:
         axis_probs = np.array([0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10,
                                20,30,40,50,60,70,80,90,95,98,99,99.5,
-                               99.8,99.9,99.95,99.98,99.99])/100.0
-    axis_qntls = dist.ppf(axis_probs)
+                               99.8,99.9,99.95,99.98,99.99])
+
+    axis_qntls = dist.ppf(axis_probs/100.0)
     ax.set_xticks(axis_qntls)
-    ax.set_xticklabels(axis_probs*100, rotation=45,
-                       rotation_mode='anchor',
-                       horizontalalignment='right',
-                       verticalalignment='center')
+    ax.set_xticklabels(axis_probs, rotation=45, horizontalalignment='right',
+                       verticalalignment='center', rotation_mode='anchor')
     ax.set_xlim([axis_qntls.min(), axis_qntls.max()])
 
-def _do_plot(x, y, dist=None, line=False, ax=None, fmt='bo'):
+def _do_plot(x, y, dist=None, line=None, ax=None, plotkwargs={}):
     """
     Boiler plate plotting function for the `ppplot`, `qqplot`, and
     `probplot` methods of the `ProbPlot` class
@@ -729,12 +729,19 @@ def _do_plot(x, y, dist=None, line=False, ax=None, fmt='bo'):
     ax : Matplotlib AxesSubplot instance (see Parameters)
 
     """
+    # check for basic keys in `plotkwargs`
+    if 'marker' not in plotkwargs.keys():
+        plotkwargs.update(marker='o')
+
+    if 'markerfacecolor' not in plotkwargs.keys():
+        plotkwargs.update(markerfacecolor='blue')
+
     fig, ax = utils.create_mpl_ax(ax)
     ax.set_xmargin(0.02)
-    ax.plot(x, y, fmt)
-    if line:
-        if line not in ['r','q','45','s']:
-            msg = "%s option for line not understood" % line
+    ax.plot(x, y, **plotkwargs)
+    if line is not None:
+        if line not in ['r', 'q', '45', 's']:
+            msg = "'%s' option for line not understood" % line
             raise ValueError(msg)
 
         qqline(ax, line, x=x, y=y, dist=dist)
