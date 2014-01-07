@@ -127,7 +127,6 @@ class ProbPlot(object):
         self.data = data
         self.a = a
         self.nobs = data.shape[0]
-        self.distargs = distargs
 
         self._fit = fit
         self._dist = dist
@@ -146,7 +145,7 @@ class ProbPlot(object):
         if self.fit and len(self.fit_params) >2:
             return self._dist(*self.fit_params[:-2], loc=self.loc,
                               scale=self.scale)
-        elif  len(self._distargs) > 0:
+        elif len(self._distargs) > 0:
             return self._dist(*self._distargs, loc=self.loc,
                               scale=self.scale)
         else:
