@@ -138,27 +138,6 @@ class ProbPlot(object):
         if isinstance(dist, basestring):
             dist = getattr(stats, dist)
 
-        '''
-        self.fit_params = None
-        if fit:
-            self.fit_params = dist.fit(data)
-            self.loc = self.fit_params[-2]
-            self.scale = self.fit_params[-1]
-            if len(self.fit_params) > 2:
-                self.dist = dist(*self.fit_params[:-2],
-                                 **dict(loc = 0, scale = 1))
-            else:
-                self.dist = dist(loc=0, scale=1)
-        elif distargs or loc == 0 or scale == 1:
-            self.dist = dist(*distargs, **dict(loc=loc, scale=scale))
-            self.loc = loc
-            self.scale = scale
-        else:
-            self.dist = dist
-            self.loc = loc
-            self.scale = scale
-        '''
-
         # propertes
         self._cache = resettable_cache()
 
