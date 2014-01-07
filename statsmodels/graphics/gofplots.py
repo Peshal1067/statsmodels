@@ -128,13 +128,20 @@ class ProbPlot(object):
         self.a = a
         self.nobs = data.shape[0]
         self.distargs = distargs
-        self.fit = fit
+
+        self._fit = fit
+        self._dist = dist
+        self._loc = loc
+        self._scale = scale
+        self._distargs = distargs
 
         if isinstance(dist, basestring):
             dist = getattr(stats, dist)
 
-        self.fit_params = dist.fit(data)
+        '''
+        self.fit_params = None
         if fit:
+            self.fit_params = dist.fit(data)
             self.loc = self.fit_params[-2]
             self.scale = self.fit_params[-1]
             if len(self.fit_params) > 2:
@@ -150,9 +157,51 @@ class ProbPlot(object):
             self.dist = dist
             self.loc = loc
             self.scale = scale
+        '''
 
         # propertes
         self._cache = resettable_cache()
+
+    @cache_readonly
+    def dist(self):
+        if self.fit and len(self.fit_params) >2:
+            return self._dist(*self.fit_params[:-2], loc=self.loc,
+                              scale=self.scale)
+
+        elif  len(self._distargs) > 0:
+            return self._dist(*self._distargs, loc=self.loc,
+                              scale=self.scale)
+
+        else:
+            return self._dist
+
+    @property
+    def fit(self):
+        return self._fit
+    @fit.setter
+    def fit(self, value):
+        self._fit = value
+
+    @cache_readonly
+    def fit_params(self):
+        if self.fit:
+            return self.dist.fit(self.data)
+        else:
+            return None
+
+    @cache_readonly
+    def loc(self):
+        if self.fit:
+            self.fit_params[-2]
+        else:
+            return self._loc
+
+    @cache_readonly
+    def scale(self):
+        if self.fit:
+            return self.fit_params[-1]
+        else:
+            return self._scale
 
     @cache_readonly
     def theoretical_percentiles(self):
