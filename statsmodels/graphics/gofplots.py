@@ -227,7 +227,7 @@ class ProbPlot(object):
         Returns
         -------
         fig : Matplotlib figure instance
-            If `ax` is None, the created figure.  Otherwise the figure to which
+            If `ax` is None, the created figure. Otherwise the figure to which
             `ax` is connected.
         """
         if other is not None:
@@ -301,7 +301,7 @@ class ProbPlot(object):
         Returns
         -------
         fig : Matplotlib figure instance
-            If `ax` is None, the created figure.  Otherwise the figure to which
+            If `ax` is None, the created figure. Otherwise the figure to which
             `ax` is connected.
         """
         if other is not None:
@@ -377,7 +377,7 @@ class ProbPlot(object):
         Returns
         -------
         fig : Matplotlib figure instance
-            If `ax` is None, the created figure.  Otherwise the figure to which
+            If `ax` is None, the created figure. Otherwise the figure to which
             `ax` is connected.
         """
         if exceed:
@@ -453,11 +453,13 @@ def qqplot(data, dist=stats.norm, distargs=(), a=0, loc=0, scale=1, fit=False,
     ax : Matplotlib AxesSubplot instance, optional
         If given, this subplot is used to plot in instead of a new figure being
         created.
+    plotkwargs : dict of additional matplotlib arguments to be passed to
+        the `plot` command.
 
     Returns
     -------
     fig : Matplotlib figure instance
-        If `ax` is None, the created figure.  Otherwise the figure to which
+        If `ax` is None, the created figure. Otherwise the figure to which
         `ax` is connected.
 
     See Also
@@ -505,10 +507,11 @@ def qqplot(data, dist=stats.norm, distargs=(), a=0, loc=0, scale=1, fit=False,
     """
     probplot = ProbPlot(data, dist=dist, distargs=distargs,
                          fit=fit, a=a, loc=loc, scale=scale)
-    fig = probplot.qqplot(ax=ax, line=line)
+    fig = probplot.qqplot(ax=ax, line=line, plotkwargs=plotkwargs)
     return fig
 
-def qqplot_2samples(data1, data2, xlabel=None, ylabel=None, line=None, ax=None):
+def qqplot_2samples(data1, data2, xlabel=None, ylabel=None, line=None,
+                    ax=None, plotkwargs={}):
     """
     Q-Q Plot of two samples' quantiles.
 
@@ -526,24 +529,26 @@ def qqplot_2samples(data1, data2, xlabel=None, ylabel=None, line=None, ax=None):
     line : str {'45', 's', 'r', q'} or None
         Options for the reference line to which the data is compared:
 
-        - '45' - 45-degree line
-        - 's' - standardized line, the expected order statistics are scaled
-          by the standard deviation of the given sample and have the mean
-          added to them
-        - 'r' - A regression line is fit
-        - 'q' - A line is fit through the quartiles.
-        - None - by default no reference line is added to the plot.
-        - If True a reference line is drawn on the graph. The default is to
-          fit a line via OLS regression.
+          - '45' - 45-degree line
+          - 's' - standardized line, the expected order statistics are scaled
+            by the standard deviation of the given sample and have the mean
+            added to them
+          - 'r' - A regression line is fit
+          - 'q' - A line is fit through the quartiles.
+          - None - by default no reference line is added to the plot.
+          - If True a reference line is drawn on the graph. The default is to
+            fit a line via OLS regression.
 
     ax : Matplotlib AxesSubplot instance, optional
         If given, this subplot is used to plot in instead of a new figure being
         created.
+    plotkwargs : dict of additional matplotlib arguments to be passed to
+        the `plot` command.
 
     Returns
     -------
     fig : Matplotlib figure instance
-        If `ax` is None, the created figure.  Otherwise the figure to which
+        If `ax` is None, the created figure. Otherwise the figure to which
         `ax` is connected.
 
     See Also
@@ -574,8 +579,8 @@ def qqplot_2samples(data1, data2, xlabel=None, ylabel=None, line=None, ax=None):
         data1 = ProbPlot(data1)
         data2 = ProbPlot(data2)
 
-    fig = data1.qqplot(xlabel=xlabel, ylabel=ylabel,
-                       line=line, other=data2, ax=ax)
+    fig = data1.qqplot(xlabel=xlabel, ylabel=ylabel, line=line, other=data2,
+                       ax=ax, plotkwargs=plotkwargs)
 
     return fig
 
@@ -605,6 +610,10 @@ def qqline(ax, line, x=None, y=None, dist=None, fmt='r-'):
     dist : scipy.stats.distribution
         A scipy.stats distribution, needed if line is 'q'.
 
+    Returns
+    -------
+    Matplotlib line artist.
+
     Notes
     -----
     There is no return value. The line is plotted on the given `ax`.
@@ -613,10 +622,9 @@ def qqline(ax, line, x=None, y=None, dist=None, fmt='r-'):
         end_pts = zip(ax.get_xlim(), ax.get_ylim())
         end_pts[0] = min(end_pts[0])
         end_pts[1] = max(end_pts[1])
-        ax.plot(end_pts, end_pts, fmt)
+        lineartist, = ax.plot(end_pts, end_pts, fmt)
         ax.set_xlim(end_pts)
         ax.set_ylim(end_pts)
-        return # does this have any side effects?
 
     if x is None and y is None:
         raise ValueError("If line is not 45, x and y cannot be None.")
@@ -625,12 +633,12 @@ def qqline(ax, line, x=None, y=None, dist=None, fmt='r-'):
         # could use ax.lines[0].get_xdata(), get_ydata(),
         # but don't know axes are 'clean'
         y = OLS(y, add_constant(x)).fit().fittedvalues
-        ax.plot(x,y,fmt)
+        lineartist, = ax.plot(x,y,fmt)
 
     elif line == 's':
         m,b = y.std(), y.mean()
         ref_line = x*m + b
-        ax.plot(x, ref_line, fmt)
+        lineartist, = ax.plot(x, ref_line, fmt)
 
     elif line == 'q':
         _check_for_ppf(dist)
@@ -639,7 +647,9 @@ def qqline(ax, line, x=None, y=None, dist=None, fmt='r-'):
         theoretical_quartiles = dist.ppf([0.25, 0.75])
         m = (q75 - q25) / np.diff(theoretical_quartiles)
         b = q25 - m*theoretical_quartiles[0]
-        ax.plot(x, m*x + b, fmt)
+        lineartist, = ax.plot(x, m*x + b, fmt)
+
+    return lineartist
 
 
 #about 10x faster than plotting_position in sandbox and mstats
