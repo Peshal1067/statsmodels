@@ -187,10 +187,10 @@ class ProbPlot(object):
     def sample_percentiles(self):
         quantiles = \
             (self.sorted_data - self.fit_params[-2])/self.fit_params[-1]
-        return self.dist.cdf(qntls)
+        return self.dist.cdf(quantiles)
 
     def ppplot(self, xlabel=None, ylabel=None, line=None, other=None,
-               ax=None, **plotkwargs):
+               ax=None, plotkwargs={}):
         """
         P-P plot of the percentiles (probabilities) of x versus the
         probabilities (percetiles) of a distribution.
@@ -203,15 +203,15 @@ class ProbPlot(object):
         line : str {'45', 's', 'r', q'} or None, optional
             Options for the reference line to which the data is compared:
 
-            - '45' - 45-degree line
-            - 's' - standardized line, the expected order statistics are scaled
-              by the standard deviation of the given sample and have the mean
-              added to them
-            - 'r' - A regression line is fit
-            - 'q' - A line is fit through the quartiles.
-            - None - by default no reference line is added to the plot.
-            - If True a reference line is drawn on the graph. The default is to
-              fit a line via OLS regression.
+              - '45' - 45-degree line
+              - 's' - standardized line, the expected order statistics are scaled
+                by the standard deviation of the given sample and have the mean
+                added to them
+              - 'r' - A regression line is fit
+              - 'q' - A line is fit through the quartiles.
+              - None - by default no reference line is added to the plot.
+              - If True a reference line is drawn on the graph. The default is to
+                fit a line via OLS regression.
         other : `ProbPlot` instance, array-like, or None, optional
             If provided, the sample quantiles of this `ProbPlot` instance are
             plotted against the sample quantiles of the `other` `ProbPlot`
@@ -221,8 +221,8 @@ class ProbPlot(object):
         ax : Matplotlib AxesSubplot instance, optional
             If given, this subplot is used to plot in instead of a new figure
             being created.
-        **plotkwargs : additional matplotlib arguments to be passed to the
-            `plot` command.
+        plotkwargs : dict of additional matplotlib arguments to be passed to
+            the `plot` command.
 
         Returns
         -------
@@ -238,7 +238,7 @@ class ProbPlot(object):
             fig, ax = _do_plot(other.sample_percentiles,
                                self.sample_percentiles,
                                self.dist, ax=ax, line=line,
-                               **plotkwargs)
+                               plotkwargs=plotkwargs)
 
             if xlabel is None:
                 xlabel = 'Probabilities of 2nd Sample'
@@ -249,7 +249,7 @@ class ProbPlot(object):
             fig, ax = _do_plot(self.theoretical_percentiles,
                                self.sample_percentiles,
                                self.dist, ax=ax, line=line,
-                               **plotkwargs)
+                               plotkwargs=plotkwargs)
             if xlabel is None:
                 xlabel = "Theoretical Probabilities"
             if ylabel is None:
@@ -264,7 +264,7 @@ class ProbPlot(object):
         return fig
 
     def qqplot(self, xlabel=None, ylabel=None, line=None, other=None,
-               ax=None, **plotkwargs):
+               ax=None, plotkwargs={}):
         """
         Q-Q plot of the quantiles of x versus the quantiles/ppf of a
         distribution or the quantiles of another `ProbPlot` instance.
@@ -276,15 +276,16 @@ class ProbPlot(object):
             other values are used depending on the status of the kwarg `other`.
         line : str {'45', 's', 'r', q'} or None, optional
             Options for the reference line to which the data is compared:
-            - '45' - 45-degree line
-            - 's' - standardized line, the expected order statistics are scaled
-              by the standard deviation of the given sample and have the mean
-              added to them
-            - 'r' - A regression line is fit
-            - 'q' - A line is fit through the quartiles.
-            - None - by default no reference line is added to the plot.
-            - If True a reference line is drawn on the graph. The default is to
-              fit a line via OLS regression.
+
+              - '45' - 45-degree line
+              - 's' - standardized line, the expected order statistics are scaled
+                by the standard deviation of the given sample and have the mean
+                added to them
+              - 'r' - A regression line is fit
+              - 'q' - A line is fit through the quartiles.
+              - None - by default no reference line is added to the plot.
+              - If True a reference line is drawn on the graph. The default is to
+                fit a line via OLS regression.
         other : `ProbPlot` instance, array-like, or None, optional
             If provided, the sample quantiles of this `ProbPlot` instance are
             plotted against the sample quantiles of the `other` `ProbPlot`
@@ -294,8 +295,8 @@ class ProbPlot(object):
         ax : Matplotlib AxesSubplot instance, optional
             If given, this subplot is used to plot in instead of a new figure
             being created.
-        **plotkwargs : additional matplotlib arguments to be passed to the
-            `plot` command.
+        plotkwargs : dict of additional matplotlib arguments to be passed to
+            the `plot` command.
 
         Returns
         -------
@@ -311,7 +312,7 @@ class ProbPlot(object):
             fig, ax = _do_plot(other.sample_quantiles,
                                self.sample_quantiles,
                                self.dist, ax=ax, line=line,
-                               **plotkwargs)
+                               plotkwargs=plotkwargs)
 
             if xlabel is None:
                 xlabel = 'Quantiles of 2nd Sample'
@@ -322,7 +323,7 @@ class ProbPlot(object):
             fig, ax = _do_plot(self.theoretical_quantiles,
                                self.sample_quantiles,
                                self.dist, ax=ax, line=line,
-                               **plotkwargs)
+                               plotkwargs=plotkwargs)
             if xlabel is None:
                 xlabel = "Theoretical Quantiles"
             if ylabel is None:
@@ -334,7 +335,7 @@ class ProbPlot(object):
         return fig
 
     def probplot(self, xlabel=None, ylabel=None, line=None,
-                 exceed=False, ax=None, **plotkwargs):
+                 exceed=False, ax=None, plotkwargs={}):
         """
         Probability plot of the unscaled quantiles of x versus the
         probabilities of a distibution (not to be confused with a P-P plot).
@@ -350,15 +351,15 @@ class ProbPlot(object):
         line : str {'45', 's', 'r', q'} or None, optional
             Options for the reference line to which the data is compared:
 
-            - '45' - 45-degree line
-            - 's' - standardized line, the expected order statistics are scaled
-              by the standard deviation of the given sample and have the mean
-              added to them
-            - 'r' - A regression line is fit
-            - 'q' - A line is fit through the quartiles.
-            - None - by default no reference line is added to the plot.
-            - If True a reference line is drawn on the graph. The default is to
-              fit a line via OLS regression.
+              - '45' - 45-degree line
+              - 's' - standardized line, the expected order statistics are scaled
+                by the standard deviation of the given sample and have the mean
+                added to them
+              - 'r' - A regression line is fit
+              - 'q' - A line is fit through the quartiles.
+              - None - by default no reference line is added to the plot.
+              - If True a reference line is drawn on the graph. The default is to
+                fit a line via OLS regression.
         exceed : boolean, optional
 
              - If False (default) the raw sample quantiles are plotted against
@@ -370,8 +371,8 @@ class ProbPlot(object):
         ax : Matplotlib AxesSubplot instance, optional
             If given, this subplot is used to plot in instead of a new figure
             being created.
-        **plotkwargs : additional matplotlib arguments to be passed to the
-            `plot` command.
+        plotkwargs : dict of additional matplotlib arguments to be passed to
+            the `plot` command.
 
         Returns
         -------
@@ -383,7 +384,7 @@ class ProbPlot(object):
             fig, ax = _do_plot(self.theoretical_quantiles[::-1],
                                self.sorted_data,
                                self.dist, ax=ax, line=line,
-                               **plotkwargs)
+                               plotkwargs=plotkwargs)
             if xlabel is None:
                 xlabel = 'Probability of Exceedance (%)'
 
@@ -391,7 +392,7 @@ class ProbPlot(object):
             fig, ax = _do_plot(self.theoretical_quantiles,
                                self.sorted_data,
                                self.dist, ax=ax, line=line,
-                               **plotkwargs)
+                               plotkwargs=plotkwargs)
             if xlabel is None:
                 xlabel = 'Non-exceedance Probability (%)'
 
@@ -616,17 +617,21 @@ def qqline(ax, line, x=None, y=None, dist=None, fmt='r-'):
         ax.set_xlim(end_pts)
         ax.set_ylim(end_pts)
         return # does this have any side effects?
+
     if x is None and y is None:
         raise ValueError("If line is not 45, x and y cannot be None.")
+
     elif line == 'r':
         # could use ax.lines[0].get_xdata(), get_ydata(),
         # but don't know axes are 'clean'
         y = OLS(y, add_constant(x)).fit().fittedvalues
         ax.plot(x,y,fmt)
+
     elif line == 's':
         m,b = y.std(), y.mean()
         ref_line = x*m + b
         ax.plot(x, ref_line, fmt)
+
     elif line == 'q':
         _check_for_ppf(dist)
         q25 = stats.scoreatpercentile(y, 25)

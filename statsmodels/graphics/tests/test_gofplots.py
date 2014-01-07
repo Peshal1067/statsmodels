@@ -22,6 +22,12 @@ class BaseProbplotMixin(object):
             self.fig, self.ax = plt.subplots()
         self.other_array = np.random.normal(size=self.prbplt.data.shape)
         self.other_prbplot = sm.ProbPlot(self.other_array)
+        self.plotkwargs = dict(
+            marker='d',
+            markerfacecolor='cornflowerblue',
+            markeredgecolor='white',
+            alpha=0.5
+        )
 
     def teardown(self):
         if have_matplotlib:
@@ -86,26 +92,17 @@ class BaseProbplotMixin(object):
     @dec.skipif(not have_matplotlib)
     def test_qqplot_pltkwargs(self):
         self.fig = self.prbplt.qqplot(ax=self.ax, line=self.line,
-                                      marker='d',
-                                      markerfacecolor='cornflowerblue',
-                                      markeredgecolor='white',
-                                      alpha=0.5)
+                                      plotkwargs=plotkwargs)
 
     @dec.skipif(not have_matplotlib)
     def test_ppplot_pltkwargs(self):
         self.fig = self.prbplt.ppplot(ax=self.ax, line=self.line,
-                                      marker='d',
-                                      markerfacecolor='cornflowerblue',
-                                      markeredgecolor='white',
-                                      alpha=0.5)
+                                      plotkwargs=plotkwargs)
 
     @dec.skipif(not have_matplotlib)
     def test_probplot_pltkwargs(self):
         self.fig = self.prbplt.probplot(ax=self.ax, line=self.line,
-                                        marker='d',
-                                        markerfacecolor='cornflowerblue',
-                                        markeredgecolor='white',
-                                        alpha=0.5)
+                                        plotkwargs=plotkwargs)
 
 
 class TestProbPlotLongely(BaseProbplotMixin):
