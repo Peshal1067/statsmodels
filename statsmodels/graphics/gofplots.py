@@ -121,8 +121,7 @@ class ProbPlot(object):
     .. plot:: plots/graphics_gofplots_qqplot.py
     """
 
-    def __init__(self, data, dist=stats.norm, fit=False,
-                 distargs=(), a=0, loc=0, scale=1):
+    def __init__(self, data, dist=stats.norm, fit=False, distargs={}, a=0):
 
         self.data = data
         self.a = a
@@ -130,9 +129,11 @@ class ProbPlot(object):
 
         self._fit = fit
         self._dist = dist
-        self._loc = loc
-        self._scale = scale
         self._distargs = distargs
+
+        # set default `loc` and scale in distargs if not provided:
+        self._distargs['loc'] = self._distargs.get('loc', 0)
+        self._distargs['scale'] = self._distargs.get('scale', 1)
 
         if isinstance(dist, basestring):
             dist = getattr(stats, dist)
@@ -140,22 +141,12 @@ class ProbPlot(object):
         # propertes
         self._cache = resettable_cache()
 
-    @cache_readonly
-    def dist(self):
-        if self.fit:
-            return self._dist(*self.fit_params[:-2], loc=self.loc,
-                              scale=self.scale)
-        elif len(self._distargs) > 0:
-            return self._dist(*self._distargs, loc=self.loc,
-                              scale=self.scale)
-        else:
-            return self._dist
-
     @property
     def fit(self):
         return self._fit
     @fit.setter
     def fit(self, value):
+        self._cache.clear()
         self._fit = value
 
     @cache_readonly
@@ -166,18 +157,23 @@ class ProbPlot(object):
             return None
 
     @cache_readonly
-    def loc(self):
+    def dist(self):
         if self.fit:
-            self.fit_params[-2]
+            return self._dist(*self.fit_params)
+
+        elif self._distargs is not None:
+            return self._dist(**self._distargs)
+
         else:
-            return self._loc
+            return self._dist
+
+    @cache_readonly
+    def loc(self):
+        return self._distargs['loc']
 
     @cache_readonly
     def scale(self):
-        if self.fit:
-            return self.fit_params[-1]
-        else:
-            return self._scale
+        return self._distargs['scale']
 
     @cache_readonly
     def theoretical_percentiles(self):
