@@ -142,7 +142,7 @@ class ProbPlot(object):
 
     @cache_readonly
     def dist(self):
-        if self.fit and len(self.fit_params) >2:
+        if self.fit:
             return self._dist(*self.fit_params[:-2], loc=self.loc,
                               scale=self.scale)
         elif len(self._distargs) > 0:
@@ -203,19 +203,17 @@ class ProbPlot(object):
 
     @cache_readonly
     def sample_quantiles(self):
-        if self.fit and self.loc != 0 and self.scale != 1:
+        if self.loc != 0 and self.scale != 1:
             return (self.sorted_data-self.loc)/self.scale
         else:
             return self.sorted_data
 
     @cache_readonly
     def sample_percentiles(self):
-        quantiles = \
-            (self.sorted_data - self.fit_params[-2])/self.fit_params[-1]
-        return self.dist.cdf(quantiles)
+        return self.dist.cdf(self.sample_quantiles)
 
     def ppplot(self, xlabel=None, ylabel=None, line=None, other=None,
-               ax=None, plotkwargs={}):
+               ax=None, plot_options={}):
         """
         P-P plot of the percentiles (probabilities) of x versus the
         probabilities (percetiles) of a distribution.
@@ -246,7 +244,7 @@ class ProbPlot(object):
         ax : Matplotlib AxesSubplot instance, optional
             If given, this subplot is used to plot in instead of a new figure
             being created.
-        plotkwargs : dict of additional matplotlib arguments to be passed to
+        plot_options : dict of additional matplotlib arguments to be passed to
             the `plot` command.
 
         Returns
@@ -263,7 +261,7 @@ class ProbPlot(object):
             fig, ax = _do_plot(other.sample_percentiles,
                                self.sample_percentiles,
                                self.dist, ax=ax, line=line,
-                               plotkwargs=plotkwargs)
+                               plot_options=plot_options)
 
             if xlabel is None:
                 xlabel = 'Probabilities of 2nd Sample'
@@ -274,7 +272,7 @@ class ProbPlot(object):
             fig, ax = _do_plot(self.theoretical_percentiles,
                                self.sample_percentiles,
                                self.dist, ax=ax, line=line,
-                               plotkwargs=plotkwargs)
+                               plot_options=plot_options)
             if xlabel is None:
                 xlabel = "Theoretical Probabilities"
             if ylabel is None:
@@ -289,7 +287,7 @@ class ProbPlot(object):
         return fig
 
     def qqplot(self, xlabel=None, ylabel=None, line=None, other=None,
-               ax=None, plotkwargs={}):
+               ax=None, plot_options={}):
         """
         Q-Q plot of the quantiles of x versus the quantiles/ppf of a
         distribution or the quantiles of another `ProbPlot` instance.
@@ -320,7 +318,7 @@ class ProbPlot(object):
         ax : Matplotlib AxesSubplot instance, optional
             If given, this subplot is used to plot in instead of a new figure
             being created.
-        plotkwargs : dict of additional matplotlib arguments to be passed to
+        plot_options : dict of additional matplotlib arguments to be passed to
             the `plot` command.
 
         Returns
@@ -337,7 +335,7 @@ class ProbPlot(object):
             fig, ax = _do_plot(other.sample_quantiles,
                                self.sample_quantiles,
                                self.dist, ax=ax, line=line,
-                               plotkwargs=plotkwargs)
+                               plot_options=plot_options)
 
             if xlabel is None:
                 xlabel = 'Quantiles of 2nd Sample'
@@ -348,7 +346,7 @@ class ProbPlot(object):
             fig, ax = _do_plot(self.theoretical_quantiles,
                                self.sample_quantiles,
                                self.dist, ax=ax, line=line,
-                               plotkwargs=plotkwargs)
+                               plot_options=plot_options)
             if xlabel is None:
                 xlabel = "Theoretical Quantiles"
             if ylabel is None:
@@ -360,7 +358,7 @@ class ProbPlot(object):
         return fig
 
     def probplot(self, xlabel=None, ylabel=None, line=None,
-                 exceed=False, ax=None, plotkwargs={}):
+                 exceed=False, ax=None, plot_options={}):
         """
         Probability plot of the unscaled quantiles of x versus the
         probabilities of a distibution (not to be confused with a P-P plot).
@@ -396,7 +394,7 @@ class ProbPlot(object):
         ax : Matplotlib AxesSubplot instance, optional
             If given, this subplot is used to plot in instead of a new figure
             being created.
-        plotkwargs : dict of additional matplotlib arguments to be passed to
+        plot_options : dict of additional matplotlib arguments to be passed to
             the `plot` command.
 
         Returns
@@ -409,7 +407,7 @@ class ProbPlot(object):
             fig, ax = _do_plot(self.theoretical_quantiles[::-1],
                                self.sorted_data,
                                self.dist, ax=ax, line=line,
-                               plotkwargs=plotkwargs)
+                               plot_options=plot_options)
             if xlabel is None:
                 xlabel = 'Probability of Exceedance (%)'
 
@@ -417,7 +415,7 @@ class ProbPlot(object):
             fig, ax = _do_plot(self.theoretical_quantiles,
                                self.sorted_data,
                                self.dist, ax=ax, line=line,
-                               plotkwargs=plotkwargs)
+                               plot_options=plot_options)
             if xlabel is None:
                 xlabel = 'Non-exceedance Probability (%)'
 
@@ -478,7 +476,7 @@ def qqplot(data, dist=stats.norm, distargs=(), a=0, loc=0, scale=1, fit=False,
     ax : Matplotlib AxesSubplot instance, optional
         If given, this subplot is used to plot in instead of a new figure being
         created.
-    plotkwargs : dict of additional matplotlib arguments to be passed to
+    plot_options : dict of additional matplotlib arguments to be passed to
         the `plot` command.
 
     Returns
@@ -532,11 +530,11 @@ def qqplot(data, dist=stats.norm, distargs=(), a=0, loc=0, scale=1, fit=False,
     """
     probplot = ProbPlot(data, dist=dist, distargs=distargs,
                          fit=fit, a=a, loc=loc, scale=scale)
-    fig = probplot.qqplot(ax=ax, line=line, plotkwargs=plotkwargs)
+    fig = probplot.qqplot(ax=ax, line=line, plot_options=plot_options)
     return fig
 
 def qqplot_2samples(data1, data2, xlabel=None, ylabel=None, line=None,
-                    ax=None, plotkwargs={}):
+                    ax=None, plot_options={}):
     """
     Q-Q Plot of two samples' quantiles.
 
@@ -567,7 +565,7 @@ def qqplot_2samples(data1, data2, xlabel=None, ylabel=None, line=None,
     ax : Matplotlib AxesSubplot instance, optional
         If given, this subplot is used to plot in instead of a new figure being
         created.
-    plotkwargs : dict of additional matplotlib arguments to be passed to
+    plot_options : dict of additional matplotlib arguments to be passed to
         the `plot` command.
 
     Returns
@@ -605,7 +603,7 @@ def qqplot_2samples(data1, data2, xlabel=None, ylabel=None, line=None,
         data2 = ProbPlot(data2)
 
     fig = data1.qqplot(xlabel=xlabel, ylabel=ylabel, line=line, other=data2,
-                       ax=ax, plotkwargs=plotkwargs)
+                       ax=ax, plot_options=plot_options)
 
     return fig
 
@@ -744,7 +742,7 @@ def _fmt_probplot_axis(ax, dist, nobs):
                        verticalalignment='center', rotation_mode='anchor')
     ax.set_xlim([axis_qntls.min(), axis_qntls.max()])
 
-def _do_plot(x, y, dist=None, line=None, ax=None, plotkwargs={}):
+def _do_plot(x, y, dist=None, line=None, ax=None, plot_options={}):
     """
     Boiler plate plotting function for the `ppplot`, `qqplot`, and
     `probplot` methods of the `ProbPlot` class
@@ -769,16 +767,19 @@ def _do_plot(x, y, dist=None, line=None, ax=None, plotkwargs={}):
     ax : Matplotlib AxesSubplot instance (see Parameters)
 
     """
-    # check for basic keys in `plotkwargs`
-    if 'marker' not in plotkwargs.keys():
-        plotkwargs.update(marker='o')
+    # check for basic keys in `plot_options`
+    if 'marker' not in plot_options.keys():
+        plot_options.update(marker='o')
 
-    if 'markerfacecolor' not in plotkwargs.keys():
-        plotkwargs.update(markerfacecolor='blue')
+    if 'markerfacecolor' not in plot_options.keys():
+        plot_options.update(markerfacecolor='blue')
+
+    if 'linestyle' not in plot_options.keys():
+        plot_options.update(linestyle='none')
 
     fig, ax = utils.create_mpl_ax(ax)
     ax.set_xmargin(0.02)
-    ax.plot(x, y, **plotkwargs)
+    ax.plot(x, y, **plot_options)
     if line is not None:
         if line not in ['r', 'q', '45', 's']:
             msg = "'%s' option for line not understood" % line

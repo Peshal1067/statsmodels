@@ -22,7 +22,7 @@ class BaseProbplotMixin(object):
             self.fig, self.ax = plt.subplots()
         self.other_array = np.random.normal(size=self.prbplt.data.shape)
         self.other_prbplot = sm.ProbPlot(self.other_array)
-        self.plotkwargs = dict(
+        self.plot_options = dict(
             marker='d',
             markerfacecolor='cornflowerblue',
             markeredgecolor='white',
@@ -92,17 +92,17 @@ class BaseProbplotMixin(object):
     @dec.skipif(not have_matplotlib)
     def test_qqplot_pltkwargs(self):
         self.fig = self.prbplt.qqplot(ax=self.ax, line=self.line,
-                                      plotkwargs=plotkwargs)
+                                      plot_options=plot_options)
 
     @dec.skipif(not have_matplotlib)
     def test_ppplot_pltkwargs(self):
         self.fig = self.prbplt.ppplot(ax=self.ax, line=self.line,
-                                      plotkwargs=plotkwargs)
+                                      plot_options=plot_options)
 
     @dec.skipif(not have_matplotlib)
     def test_probplot_pltkwargs(self):
         self.fig = self.prbplt.probplot(ax=self.ax, line=self.line,
-                                        plotkwargs=plotkwargs)
+                                        plot_options=plot_options)
 
 
 class TestProbPlotLongely(BaseProbplotMixin):
