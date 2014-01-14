@@ -111,7 +111,7 @@ class TestProbPlotLongely(BaseProbplotMixin):
         self.data = sm.datasets.longley.load()
         self.data.exog = sm.add_constant(self.data.exog, prepend=False)
         self.mod_fit = sm.OLS(self.data.endog, self.data.exog).fit()
-        self.prbplt = sm.ProbPlot(self.mod_fit.resid, stats.t, distargs=(4,))
+        self.prbplt = sm.ProbPlot(self.mod_fit.resid, stats.t, distargs=dict(df=4))
         self.line = 'r'
         self.base_setup()
 
@@ -138,7 +138,7 @@ class TestProbPlotRandomNormalLocScale(BaseProbplotMixin):
     def setup(self):
         np.random.seed(5)
         self.data = np.random.normal(loc=8.25, scale=3.25, size=37)
-        self.prbplt = sm.ProbPlot(self.data, loc=8.25, scale=3.25)
+        self.prbplt = sm.ProbPlot(self.data, distargs=dict(loc=8.25, scale=3.25))
         self.line = '45'
         self.base_setup()
 
@@ -149,7 +149,7 @@ class TestTopLevel:
         self.data.exog = sm.add_constant(self.data.exog, prepend=False)
         self.mod_fit = sm.OLS(self.data.endog, self.data.exog).fit()
         self.res = self.mod_fit.resid
-        self.prbplt = sm.ProbPlot(self.mod_fit.resid, stats.t, distargs=(4,))
+        self.prbplt = sm.ProbPlot(self.mod_fit.resid, stats.t, distargs=dict(df=4))
         self.other_array = np.random.normal(size=self.prbplt.data.shape)
         self.other_prbplot = sm.ProbPlot(self.other_array)
 
