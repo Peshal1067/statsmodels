@@ -136,7 +136,9 @@ class ProbPlot(object):
         self._distargs['scale'] = self._distargs.get('scale', 1)
 
         if isinstance(dist, basestring):
-            dist = getattr(stats, dist)
+            self._dist = getattr(stats, dist)
+        else:
+            self._dist = dist
 
         # propertes
         self._cache = resettable_cache()
