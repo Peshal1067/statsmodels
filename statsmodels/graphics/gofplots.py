@@ -153,10 +153,7 @@ class ProbPlot(object):
 
     @cache_readonly
     def fit_params(self):
-        if self.fit:
-            return self.dist.fit(self.data)
-        else:
-            return None
+        return self.distargs
 
     @cache_readonly
     def dist(self):
@@ -168,6 +165,13 @@ class ProbPlot(object):
 
         else:
             return self._dist
+
+    @cache_writable
+    def distargs(self):
+        if self.fit:
+            self._distargs = self.dist.fit(self.data)
+
+        return self._distargs
 
     @cache_readonly
     def loc(self):
