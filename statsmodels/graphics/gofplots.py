@@ -121,65 +121,59 @@ class ProbPlot(object):
     .. plot:: plots/graphics_gofplots_qqplot.py
     """
 
-    def __init__(self, data, dist=stats.norm, fit=False, distargs={}, a=0):
+    def __init__(self, data, dist=stats.norm, fit=False, a=0):
 
         self.data = data
         self.a = a
         self.nobs = data.shape[0]
 
         self._fit = fit
-        self._dist = dist
-        self._distargs = distargs
-
-        # set default `loc` and scale in distargs if not provided:
-        self._distargs['loc'] = self._distargs.get('loc', 0)
-        self._distargs['scale'] = self._distargs.get('scale', 1)
-
         if isinstance(dist, basestring):
-            self._dist = getattr(stats, dist)
+            self._userdist = getattr(stats, dist)
         else:
-            self._dist = dist
+            self._userdist = dist
 
-        # propertes
+        self._userdist_is_frozen = isinstance(self._userdist, 
+                                             stats.distributions.rv_frozen)
+        
+        self._dist = None
+        
         self._cache = resettable_cache()
 
     @property
     def fit(self):
         return self._fit
-    @fit.setter
+    @fit.setter 
     def fit(self, value):
         self._cache.clear()
         self._fit = value
 
     @cache_readonly
-    def fit_params(self):
-        return self.distargs
-
-    @cache_readonly
     def dist(self):
-        if self.fit:
-            return self._dist(*self.fit_params)
+        if self._dist is None:
+            if self._userdist_is_frozen:
+                self._dist = self._userdist
+            else:
+                if self.fit:
+                    self._dist = self._userdist(*self._userdist.fit(self.data))
+                else:
+                    self._dist = self._userdist()
 
-        elif self._distargs is not None:
-            return self._dist(**self._distargs)
-
-        else:
-            return self._dist
-
-    @cache_writable
-    def distargs(self):
-        if self.fit:
-            self._distargs = self.dist.fit(self.data)
-
-        return self._distargs
+        return self._dist
 
     @cache_readonly
     def loc(self):
-        return self._distargs['loc']
+        if len(self.dist.args) == 0:
+            return 0
+        else:
+            return self.dist.args[0]
 
     @cache_readonly
     def scale(self):
-        return self._distargs['scale']
+        if len(self.dist.args) == 0:
+            return 1
+        else:
+            return self.dist.args[1]
 
     @cache_readonly
     def theoretical_percentiles(self):
@@ -187,15 +181,18 @@ class ProbPlot(object):
 
     @cache_readonly
     def theoretical_quantiles(self):
-        try:
-            return self.dist.ppf(self.theoretical_percentiles)
-        except TypeError:
-            msg = '%s requires more parameters to ' \
-                  'compute ppf'.format(self.dist.name,)
-            raise TypeError(msg)
-        except:
-            msg = 'failed to compute the ppf of {0}'.format(self.dist.name,)
-            raise ValueError(msg)
+        # try:
+        #     return self.dist.dist.ppf(self.theoretical_percentiles)
+        # except TypeError:
+        #     raise
+        #     msg = 'stats.{} requires more parameters to ' \
+        #           'compute ppf'.format(self.dist.dist.name,)
+        #     raise TypeError(msg)
+        # except:
+        #     msg = 'failed to compute the ppf of ' \
+        #           'stats.{}'.format(self.dist.dist.name,)
+        #     raise ValueError(msg)
+        return self.dist.ppf(self.theoretical_percentiles)
 
     @cache_readonly
     def sorted_data(self):
@@ -204,15 +201,22 @@ class ProbPlot(object):
         return sorted_data
 
     @cache_readonly
-    def sample_quantiles(self):
-        if self.loc != 0 and self.scale != 1:
-            return (self.sorted_data-self.loc)/self.scale
+    def scaled_data(self):
+        if self.loc == 0 and self.scale == 1:
+            return (self.sorted_data-np.mean(self.data))/np.std(self.data)
         else:
-            return self.sorted_data
+            return self.sample_quantiles
+
+    @cache_readonly
+    def sample_quantiles(self):
+        return (self.sorted_data-self.loc)/self.scale
 
     @cache_readonly
     def sample_percentiles(self):
-        return self.dist.cdf(self.sample_quantiles)
+        if self.fit or self._userdist_is_frozen:
+            return self.dist.cdf(self.sorted_data)
+        else:
+            return self.dist.cdf(self.scaled_data)
 
     def ppplot(self, xlabel=None, ylabel=None, line=None, other=None,
                ax=None, plot_options={}):
@@ -405,8 +409,9 @@ class ProbPlot(object):
             If `ax` is None, the created figure. Otherwise the figure to which
             `ax` is connected.
         """
+        scaled_quantiles = self.dist.dist.ppf(self.theoretical_percentiles)
         if exceed:
-            fig, ax = _do_plot(self.theoretical_quantiles[::-1],
+            fig, ax = _do_plot(scaled_quantiles[::-1],
                                self.sorted_data,
                                self.dist, ax=ax, line=line,
                                plot_options=plot_options)
@@ -414,7 +419,7 @@ class ProbPlot(object):
                 xlabel = 'Probability of Exceedance (%)'
 
         else:
-            fig, ax = _do_plot(self.theoretical_quantiles,
+            fig, ax = _do_plot(scaled_quantiles,
                                self.sorted_data,
                                self.dist, ax=ax, line=line,
                                plot_options=plot_options)
@@ -426,9 +431,11 @@ class ProbPlot(object):
 
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
-        _fmt_probplot_axis(ax, self.dist, self.nobs)
+        dist = self.dist.dist if (self.fit or self._userdist_is_frozen) else self.dist
+        _fmt_probplot_axis(ax, dist, self.nobs)
 
         return fig
+
 
 def qqplot(data, dist=stats.norm, distargs=(), a=0, loc=0, scale=1, fit=False,
            line=False, ax=None):
@@ -535,6 +542,7 @@ def qqplot(data, dist=stats.norm, distargs=(), a=0, loc=0, scale=1, fit=False,
     fig = probplot.qqplot(ax=ax, line=line, plot_options=plot_options)
     return fig
 
+
 def qqplot_2samples(data1, data2, xlabel=None, ylabel=None, line=None,
                     ax=None, plot_options={}):
     """
@@ -608,6 +616,7 @@ def qqplot_2samples(data1, data2, xlabel=None, ylabel=None, line=None,
                        ax=ax, plot_options=plot_options)
 
     return fig
+
 
 def qqline(ax, line, x=None, y=None, dist=None, fmt='r-'):
     """
@@ -706,6 +715,7 @@ def plotting_pos(nobs, a):
     """
     return (np.arange(1.,nobs+1) - a)/(nobs- 2*a + 1)
 
+
 def _fmt_probplot_axis(ax, dist, nobs):
     """
     Formats a theoretical quantile axis to display the corresponding
@@ -772,20 +782,18 @@ def _do_plot(x, y, dist=None, line=None, ax=None, plot_options={}):
     ax : Matplotlib AxesSubplot instance (see Parameters)
 
     """
-    # check for basic keys in `plot_options`
-    if 'marker' not in plot_options.keys():
-        plot_options.update(marker='o')
+    plot_style = {
+        'marker': 'o', 
+        'markerfacecolor': 'blue', 
+        'linestyle': 'none'
+    }
 
-    if 'markerfacecolor' not in plot_options.keys():
-        plot_options.update(markerfacecolor='blue')
-
-    if 'linestyle' not in plot_options.keys():
-        plot_options.update(linestyle='none')
+    plot_style.update(**plot_options)
 
     fig, ax = utils.create_mpl_ax(ax)
     ax.set_xmargin(0.02)
 
-    ax.plot(x, y, **plot_options)
+    ax.plot(x, y, **plot_style)
     if line is not None:
         if line not in ['r', 'q', '45', 's']:
             msg = "'%s' option for line not understood" % line
@@ -794,6 +802,7 @@ def _do_plot(x, y, dist=None, line=None, ax=None, plot_options={}):
         qqline(ax, line, x=x, y=y, dist=dist)
 
     return fig, ax
+
 
 def _check_for_ppf(dist):
     if not hasattr(dist, 'ppf'):
