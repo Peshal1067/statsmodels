@@ -121,11 +121,12 @@ class ProbPlot(object):
     .. plot:: plots/graphics_gofplots_qqplot.py
     """
 
-    def __init__(self, data, dist=stats.norm, fit=False, a=0):
+    def __init__(self, data, dist=stats.norm, fit=False, a=0, distargs=()):
 
         self.data = data
         self.a = a
         self.nobs = data.shape[0]
+        self._distargs = distargs
 
         self._fit = fit
         if isinstance(dist, basestring):
@@ -134,12 +135,19 @@ class ProbPlot(object):
             self._userdist = dist
 
         self._userdist_is_frozen = isinstance(self._userdist, 
-                                             stats.distributions.rv_frozen)
+                                              stats.distributions.rv_frozen)
         
         self._dist = None
         
         self._cache = resettable_cache()
 
+    @property
+    def distargs(self):
+        return self._distargs
+    @distargs.setter
+    def distargs(self, value):
+        self._distargs = value
+    
     @property
     def fit(self):
         return self._fit
@@ -157,8 +165,9 @@ class ProbPlot(object):
                 if self.fit:
                     self._dist = self._userdist(*self._userdist.fit(self.data))
                 else:
-                    self._dist = self._userdist()
+                    self._dist = self._userdist(*self.distargs)
 
+        self.distargs = self._dist.args
         return self._dist
 
     @cache_readonly
@@ -181,17 +190,6 @@ class ProbPlot(object):
 
     @cache_readonly
     def theoretical_quantiles(self):
-        # try:
-        #     return self.dist.dist.ppf(self.theoretical_percentiles)
-        # except TypeError:
-        #     raise
-        #     msg = 'stats.{} requires more parameters to ' \
-        #           'compute ppf'.format(self.dist.dist.name,)
-        #     raise TypeError(msg)
-        # except:
-        #     msg = 'failed to compute the ppf of ' \
-        #           'stats.{}'.format(self.dist.dist.name,)
-        #     raise ValueError(msg)
         return self.dist.ppf(self.theoretical_percentiles)
 
     @cache_readonly
@@ -209,7 +207,7 @@ class ProbPlot(object):
 
     @cache_readonly
     def sample_quantiles(self):
-        return (self.sorted_data-self.loc)/self.scale
+        return self.sorted_data #(self.sorted_data-self.loc)/self.scale
 
     @cache_readonly
     def sample_percentiles(self):
@@ -409,7 +407,7 @@ class ProbPlot(object):
             If `ax` is None, the created figure. Otherwise the figure to which
             `ax` is connected.
         """
-        scaled_quantiles = self.dist.dist.ppf(self.theoretical_percentiles)
+        scaled_quantiles = self.dist.dist.ppf(self.theoretical_percentiles, *self.distargs)
         if exceed:
             fig, ax = _do_plot(scaled_quantiles[::-1],
                                self.sorted_data,
@@ -431,14 +429,14 @@ class ProbPlot(object):
 
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
-        dist = self.dist.dist if (self.fit or self._userdist_is_frozen) else self.dist
-        _fmt_probplot_axis(ax, dist, self.nobs)
+        dist = self.dist.dist #if (self.fit or self._userdist_is_frozen) else self.dist
+        _fmt_probplot_axis(ax, dist, self.nobs, distargs=self.distargs)
 
         return fig
 
 
-def qqplot(data, dist=stats.norm, distargs=(), a=0, loc=0, scale=1, fit=False,
-           line=False, ax=None):
+def qqplot(data, dist=stats.norm, distargs=(), a=0, fit=False,
+           line=False, ax=None, plot_options={}):
     """
     Q-Q plot of the quantiles of x versus the quantiles/ppf of a distribution.
 
@@ -537,8 +535,7 @@ def qqplot(data, dist=stats.norm, distargs=(), a=0, loc=0, scale=1, fit=False,
     the distribution's fit() method.
 
     """
-    probplot = ProbPlot(data, dist=dist, distargs=distargs,
-                         fit=fit, a=a, loc=loc, scale=scale)
+    probplot = ProbPlot(data, dist=dist, distargs=distargs, fit=fit, a=a)
     fig = probplot.qqplot(ax=ax, line=line, plot_options=plot_options)
     return fig
 
@@ -716,7 +713,7 @@ def plotting_pos(nobs, a):
     return (np.arange(1.,nobs+1) - a)/(nobs- 2*a + 1)
 
 
-def _fmt_probplot_axis(ax, dist, nobs):
+def _fmt_probplot_axis(ax, dist, nobs, distargs=()):
     """
     Formats a theoretical quantile axis to display the corresponding
     probabilities on the quantiles' scale.
@@ -748,7 +745,7 @@ def _fmt_probplot_axis(ax, dist, nobs):
                                20,30,40,50,60,70,80,90,95,98,99,99.5,
                                99.8,99.9,99.95,99.98,99.99])
 
-    axis_qntls = dist.ppf(axis_probs/100.0)
+    axis_qntls = dist.ppf(axis_probs/100.0, *distargs)
     ax.set_xticks(axis_qntls)
     ax.set_xticklabels(axis_probs, rotation=45, horizontalalignment='right',
                        verticalalignment='center', rotation_mode='anchor')

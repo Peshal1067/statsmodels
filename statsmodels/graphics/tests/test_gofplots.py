@@ -35,83 +35,113 @@ class BaseProbplotMixin(object):
 
     @dec.skipif(not have_matplotlib)
     def test_qqplot(self):
-        self.fig = self.prbplt.qqplot(ax=self.ax, line=self.line)
+        self.fig = self.prbplt.qqplot(ax=self.ax, line=self.line,
+                                        plot_options=self.plot_options)
 
     @dec.skipif(not have_matplotlib)
     def test_ppplot(self):
-        self.fig = self.prbplt.ppplot(ax=self.ax, line=self.line)
+        self.fig = self.prbplt.ppplot(ax=self.ax, line=self.line,
+                                        plot_options=self.plot_options)
 
     @dec.skipif(not have_matplotlib)
     def test_probplot(self):
-        self.fig = self.prbplt.probplot(ax=self.ax, line=self.line)
+        self.fig = self.prbplt.probplot(ax=self.ax, line=self.line,
+                                        plot_options=self.plot_options)
 
     @dec.skipif(not have_matplotlib)
     def test_qqplot_other_array(self):
         self.fig = self.prbplt.qqplot(ax=self.ax, line=self.line,
-                                        other=self.other_array)
+                                        other=self.other_array,
+                                        plot_options=self.plot_options)
     @dec.skipif(not have_matplotlib)
     def test_ppplot_other_array(self):
         self.fig = self.prbplt.ppplot(ax=self.ax, line=self.line,
-                                        other=self.other_array)
+                                        other=self.other_array,
+                                        plot_options=self.plot_options)
     @dec.skipif(not have_matplotlib)
-    def t_est_probplot_other_array(self):
+    def test_probplot_other_array(self):
         self.fig = self.prbplt.probplot(ax=self.ax, line=self.line,
-                                        other=self.other_array)
+                                        plot_options=self.plot_options)
 
     @dec.skipif(not have_matplotlib)
     def test_qqplot_other_prbplt(self):
         self.fig = self.prbplt.qqplot(ax=self.ax, line=self.line,
-                                        other=self.other_prbplot)
+                                        other=self.other_prbplot,
+                                        plot_options=self.plot_options)
     @dec.skipif(not have_matplotlib)
     def test_ppplot_other_prbplt(self):
         self.fig = self.prbplt.ppplot(ax=self.ax, line=self.line,
-                                        other=self.other_prbplot)
+                                        other=self.other_prbplot,
+                                        plot_options=self.plot_options)
     @dec.skipif(not have_matplotlib)
-    def t_est_probplot_other_prbplt(self):
+    def test_probplot_other_prbplt(self):
         self.fig = self.prbplt.probplot(ax=self.ax, line=self.line,
-                                        other=self.other_prbplot)
+                                        plot_options=self.plot_options)
 
     @dec.skipif(not have_matplotlib)
     def test_qqplot_custom_labels(self):
         self.fig = self.prbplt.qqplot(ax=self.ax, line=self.line,
                                       xlabel='Custom X-Label',
-                                      ylabel='Custom Y-Label')
+                                      ylabel='Custom Y-Label',
+                                      plot_options=self.plot_options)
 
     @dec.skipif(not have_matplotlib)
     def test_ppplot_custom_labels(self):
         self.fig = self.prbplt.ppplot(ax=self.ax, line=self.line,
                                       xlabel='Custom X-Label',
-                                      ylabel='Custom Y-Label')
+                                      ylabel='Custom Y-Label',
+                                      plot_options=self.plot_options)
 
     @dec.skipif(not have_matplotlib)
     def test_probplot_custom_labels(self):
         self.fig = self.prbplt.probplot(ax=self.ax, line=self.line,
                                         xlabel='Custom X-Label',
-                                        ylabel='Custom Y-Label')
+                                        ylabel='Custom Y-Label',
+                                        plot_options=self.plot_options)
 
     @dec.skipif(not have_matplotlib)
     def test_qqplot_pltkwargs(self):
         self.fig = self.prbplt.qqplot(ax=self.ax, line=self.line,
-                                      plot_options=plot_options)
+                                      plot_options=self.plot_options)
 
     @dec.skipif(not have_matplotlib)
     def test_ppplot_pltkwargs(self):
         self.fig = self.prbplt.ppplot(ax=self.ax, line=self.line,
-                                      plot_options=plot_options)
+                                      plot_options=self.plot_options)
 
     @dec.skipif(not have_matplotlib)
     def test_probplot_pltkwargs(self):
         self.fig = self.prbplt.probplot(ax=self.ax, line=self.line,
-                                        plot_options=plot_options)
+                                        plot_options=self.plot_options)
 
 
-class TestProbPlotLongely(BaseProbplotMixin):
+class TestProbPlotLongelyNoFit(BaseProbplotMixin):
     def setup(self):
         np.random.seed(5)
         self.data = sm.datasets.longley.load()
         self.data.exog = sm.add_constant(self.data.exog, prepend=False)
         self.mod_fit = sm.OLS(self.data.endog, self.data.exog).fit()
-        self.prbplt = sm.ProbPlot(self.mod_fit.resid, stats.t, distargs=dict(df=4))
+        self.prbplt = sm.ProbPlot(
+            self.mod_fit.resid, 
+            dist=stats.t, 
+            distargs=(4,), 
+            fit=False
+        )
+        self.line = 'r'
+        self.base_setup()
+
+class TestProbPlotLongelyWithFit(BaseProbplotMixin):
+    def setup(self):
+        np.random.seed(5)
+        self.data = sm.datasets.longley.load()
+        self.data.exog = sm.add_constant(self.data.exog, prepend=False)
+        self.mod_fit = sm.OLS(self.data.endog, self.data.exog).fit()
+        self.prbplt = sm.ProbPlot(
+            self.mod_fit.resid, 
+            dist=stats.t, 
+            distargs=(4,), 
+            fit=True
+        )
         self.line = 'r'
         self.base_setup()
 
@@ -134,11 +164,11 @@ class TestProbPlotRandomNormalWithFit(BaseProbplotMixin):
         self.base_setup()
 
 
-class TestProbPlotRandomNormalLocScale(BaseProbplotMixin):
+class TestProbPlotRandomNormalFullDist(BaseProbplotMixin):
     def setup(self):
         np.random.seed(5)
         self.data = np.random.normal(loc=8.25, scale=3.25, size=37)
-        self.prbplt = sm.ProbPlot(self.data, distargs=dict(loc=8.25, scale=3.25))
+        self.prbplt = sm.ProbPlot(self.data, dist=stats.norm(loc=8.5, scale=3.0))
         self.line = '45'
         self.base_setup()
 
@@ -149,7 +179,7 @@ class TestTopLevel:
         self.data.exog = sm.add_constant(self.data.exog, prepend=False)
         self.mod_fit = sm.OLS(self.data.endog, self.data.exog).fit()
         self.res = self.mod_fit.resid
-        self.prbplt = sm.ProbPlot(self.mod_fit.resid, stats.t, distargs=dict(df=4))
+        self.prbplt = sm.ProbPlot(self.mod_fit.resid, dist=stats.t, distargs=(4,))
         self.other_array = np.random.normal(size=self.prbplt.data.shape)
         self.other_prbplot = sm.ProbPlot(self.other_array)
 
